@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harbour Party Announcer</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #1e1e2f; color: #fff; text-align: center; padding: 2rem; }
+        h1 { color: #4ade80; margin-bottom: 0.5rem;}
+        p.subtitle { color: #94a3b8; margin-top: 0; }
+        #clock { font-size: 6rem; font-weight: bold; margin: 1rem 0; font-variant-numeric: tabular-nums; color: #f8fafc; }
+        #start-btn { padding: 1rem 2rem; font-size: 1.2rem; background-color: #4ade80; color: #1e1e2f; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .hidden { display: none; }
+        #schedule-container { max-width: 800px; margin: 0 auto; text-align: left; background: #2a2a40; padding: 1.5rem; border-radius: 12px; }
+        .item { display: flex; flex-wrap: wrap; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid #3f3f5a; align-items: center; gap: 10px;}
+        .item:last-child { border-bottom: none; }
+        .time { font-weight: bold; color: #60a5fa; font-size: 1.3rem; min-width: 70px; }
+        .details { flex-grow: 1; font-size: 1.1rem; }
+        .duration { color: #a78bfa; font-size: 0.9rem; margin-top: 4px; }
+        .status { min-width: 100px; text-align: right;}
+        .countdown { font-weight: bold; padding: 0.3rem 0.6rem; border-radius: 6px; }
+        .played { opacity: 0.5; filter: grayscale(100%); }
+        .controls { display: flex; gap: 8px; width: 100%; justify-content: flex-end; margin-top: 5px;}
+        button.action-btn { background: #3f3f5a; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
+        button.action-btn:hover { background: #4f4f7a; }
+        button.play-btn { background: #4ade80; color: #1e1e2f; font-weight: bold; }
+        button.play-btn:hover { background: #22c55e; }
+        button.cancel-btn { background: #ef4444; color: white;}
+        button.cancel-btn:hover { background: #dc2626; }
+    </style>
+</head>
+<body>
+    <h1>⚓ Harbour Party Announcer</h1>
+    <p class="subtitle">Bjarne's Final Edition</p>
+    
+    <button id="start-btn">Start Announcer</button>
+
+    <div id="app" class="hidden">
+        <div id="clock">00:00:00</div>
+        <div id="schedule-container">
+            <h2 style="margin-top: 0; border-bottom: 2px solid #3f3f5a; padding-bottom: 10px;">Upcoming Speeches</h2>
+            <div id="schedule-list">Loading schedule...</div>
+        </div>
+    </div>
+
+    <script>
+        let schedule = [];
+        let playedFiles = new Set();
+        let fileDurations = {}; // Cache to store durations so we don't load them repeatedly
+
+        document.getElementById('start-btn').addEventListener('click', async () => {
+            document.getElementById('start-btn').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            await UpdateList();
+            setInterval(tick, 1000);
+            tick(); 
+        });
+
+        // The update function you suggested
+        async function UpdateList() {
+            const response = await fetch('/api/schedule');
+            let newSchedule = await response.json();
+
+            // Fetch durations for files we haven't checked yet
+            for (let item of newSchedule) {
+                if (!fileDurations[item.url]) {
+                    fileDurations[item.url] = await getAudioDuration(item.url);
+                }
+                item.durationStr = fileDurations[item.url];
+            }
+            
+            schedule = newSchedule;
+            const now = new Date();
+            updateScheduleUI(now.getHours(), now.getMinutes());
+        }
+
+        // Helper to grab duration using browser's Audio engine
+        function getAudioDuration(url) {
+            return new Promise(resolve => {
+                const audio = new Audio(url);
+                audio.addEventListener('loadedmetadata', () => {
+                    const mins = Math.floor(audio.duration / 60);
+                    const secs = Math.floor(audio.duration % 60);
+                    resolve(`${mins}m ${secs}s`);
+                });
+                audio.addEventListener('error', () => resolve("Unknown"));
+            });
+        }
+
+        function tick() {
+            const now = new Date();
+            const h = now.getHours();
+            const m = now.getMinutes();
+            const s = now.getSeconds();
+            
+            document.getElementById('clock').innerText = 
+                String(h).padStart(2, '0') + ':' + 
+                String(m).padStart(2, '0') + ':' + 
+                String(s).padStart(2, '0');
+
+            updateScheduleUI(h, m);
+            checkAudioTrigger(h, m, s);
+            
+            // Auto-refresh the list every minute at 30 seconds past to check for manual file drops
+            if (s === 30) UpdateList();
+        }
+
+        function updateScheduleUI(currentHour, currentMinute) {
+            const listDiv = document.getElementById('schedule-list');
+            if (schedule.length === 0) {
+                listDiv.innerHTML = '<p style="text-align:center;">No scheduled MP3s found.</p>';
+                return;
+            }
+
+            let html = '';
+            const nowMinutes = currentHour * 60 + currentMinute;
+
+            schedule.forEach(item => {
+                const itemMinutes = item.hour * 60 + item.minute;
+                let statusHtml = '';
+                let rowClass = 'item';
+                let isPlayed = playedFiles.has(item.url);
+
+                if (isPlayed) {
+                    statusHtml = '<span class="countdown" style="color: #94a3b8;">Played/Canceled</span>';
+                    rowClass += ' played';
+                } else if (itemMinutes < nowMinutes) {
+                    statusHtml = '<span class="countdown" style="color: #ef4444;">Missed</span>';
+                    rowClass += ' played';
+                } else {
+                    const diff = itemMinutes - nowMinutes;
+                    statusHtml = diff === 0 
+                        ? `<span class="countdown" style="color: #4ade80;">Playing Now!</span>` 
+                        : `<span class="countdown" style="color: #fb923c;">in ${diff} min</span>`;
+                }
+
+                html += `
+                    <div class="${rowClass}">
+                        <div class="time">${item.timeString}</div>
+                        <div class="details">
+                            <div>${item.text}</div>
+                            <div class="duration">⏱ Length: ${item.durationStr || 'Loading...'}</div>
+                        </div>
+                        <div class="status">${statusHtml}</div>
+                        
+                        ${!isPlayed ? `
+                        <div class="controls">
+                            <button class="action-btn" onclick="delayItem('${item.url}')">+5 Min</button>
+                            <button class="action-btn cancel-btn" onclick="cancelItem('${item.url}')">Cancel</button>
+                            <button class="action-btn play-btn" onclick="playNow('${item.url}')">Play Now</button>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            listDiv.innerHTML = html;
+        }
+
+        function checkAudioTrigger(h, m, s) {
+            if (s !== 0) return;
+            schedule.forEach(item => {
+                if (item.hour === h && item.minute === m && !playedFiles.has(item.url)) {
+                    playAudioFile(item.url);
+                }
+            });
+        }
+
+        function playAudioFile(url) {
+            playedFiles.add(url); 
+            const audio = new Audio(url);
+            audio.play().catch(e => console.error("Playback failed:", e));
+            const now = new Date();
+            updateScheduleUI(now.getHours(), now.getMinutes());
+        }
+
+        // --- BUTTON ACTIONS ---
+        
+        async function delayItem(url) {
+            await fetch('/api/delay', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url, addMinutes: 5 })
+            });
+            await UpdateList(); // Refresh list to show new times
+        }
+
+        function playNow(url) {
+            playAudioFile(url);
+        }
+
+        function cancelItem(url) {
+            playedFiles.add(url); // Marking it as played removes it from queue
+            const now = new Date();
+            updateScheduleUI(now.getHours(), now.getMinutes());
+        }
+    </script>
+</body>
+</html>
