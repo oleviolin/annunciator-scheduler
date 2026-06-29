@@ -8,15 +8,17 @@
 
 Make below directory structure on your computer.
 You may download it from 
-[Github](https://github.com/oleviolin/annoncment-sceduler/
+[Github](https://github.com/oleviolin/annunciator-scheduler
 You need following directory structure
 
-annoncment_sceduler/     <-- or other directory of choice           \
-├── audio/            <-- Drop your MP3s and subfolders here        \ 
-├── public/                                                         \
-│   └── index.html    <-- The user interface                        \
-├── server.js         <-- The Node.js backend                       \
-├── package.json                                                    \
+annoncment_sceduler/     <-- or other directory of choice           \ <br>
+├── audio/            <-- Drop your MP3s and subfolders here        \ <br>
+├── public/                                                         \ <br>
+│   └── index.html    <-- The user interface                        \ <br>
+├── server.js         <-- The Node.js backend                       \ <br>
+├── package.json                                                    \ <br>
+
+</p>
 
 in the audio/ folder (or any subfolder of the audio/-folder
 put some mp3 files, the mp3 files must start with the string HH_MM_ 
