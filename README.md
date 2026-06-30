@@ -1,5 +1,5 @@
 
-# The yearly Vedbæk Harbourparty Announcement Scheduler software
+# The yearly Vedbæk Harbourparty Announcement Scheduler software v 2.0
 
 ## Installation
 While the original Vedbæk Harbour Party Announcement software 1.00 was running in Microsoft Internet Explorer (MSIE), 
@@ -58,11 +58,11 @@ Alternatively you may use the simpler command:
 ```javascript
 node server
 ```
-[open a browser at] (https://localhost:3000
+[open a browser at localhost:3000] (https://localhost:3000)
 Click on the Start Announcer button.
 
 ## Stopping the server
-Stop the server by entering ctrl-C in the window from where the server was storted, or closing the (node command) window
+Stop the server by entering **ctrl-C** in the window from where the server was storted, or closing the (node command) window
 
 Remember to restart the server -- node server.js -- if you change code
 
@@ -71,20 +71,6 @@ Remember to restart the server -- node server.js -- if you change code
 [MIT](https://choosealicense.com/licenses/mit/)
 
 
-# The story
-
-Scheduled speach anouncer in node.js
-
-
-## Gemini startup
-
-Once upon a time my collegue Bjarne walked into my office and asked if could help him makeing some software for the harbour yearly party in Vedbæk, 
-where he was making the PA-sound, and the speaches of what was going to happen every hour or so.
-I made a speach anouncement in javascript, working in Microsoft explorer. I remember it took me 3 hours to program  he was quite impressed, Bjarne still uses the program (he has kept an old computer where MSIE is still working.
-The program searches for mp3 files that has to be named HH_MM_text.mp3 where HH_MM is the (24-hour format) Hour and minute the file is played. just a clock and a list of files to be played.
-MSIE was allowed to list files on the local directory, of course that is not possible today, but you can do it with NodeJS today.
-I think think I would like the files to be in different subdirectories. The user interface should be a clock, and a list of next files to be played and how many minutes remaining for each file.
-<p>This is an update of the program, using NodeJS instead of MSIE.
 
 
 
