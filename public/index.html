@@ -27,11 +27,37 @@
         button.play-btn:hover { background: #22c55e; }
         button.cancel-btn { background: #ef4444; color: white;}
         button.cancel-btn:hover { background: #dc2626; }
+        .menu_right{
+            position:absolute;
+            right: 10px;
+            top: 10px;
+            color: #4ade80; 
+            margin-bottom: 0.5rem;
+        
+        }
+        a:link {
+            color: #4ade80;
+        }
+            /* visited link */
+            a:visited {
+            color: green;
+            }
+            /* mouse over link */
+            a:hover {
+            color: hotpink;
+            }
+            /* selected link */
+            a:active {
+            color: blue;
+            }
     </style>
 </head>
 <body>
-    <h1>⚓ Harbour Party Announcer</h1>
-    <p class="subtitle">Bjarne's Final Edition</p>
+    <h1>⚓ Vedbæk Harbour Party Announcer v. 2.00</h1>
+    <p class="subtitle">NodeJS Edition</p>
+    <div class="menu_right">
+        <a href="./about.html">About</a>
+    </div>
     
     <button id="start-btn">Start Announcer</button>
 
